@@ -1,0 +1,1070 @@
+<!DOCTYPE html>
+<!-- saved from url=(0072)file:///C:/Users/DeLL/Downloads/Telegram%20Desktop/progress-tracker.html -->
+<html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Progress Tracker</title>
+<link href="./Progress Tracker_files/css2" rel="stylesheet">
+<script src="./Progress Tracker_files/chart.umd.js.download"></script>
+<style>
+  :root {
+    --teal-50: #E1F5EE; --teal-100: #9FE1CB; --teal-200: #5DCAA5;
+    --teal-400: #1D9E75; --teal-600: #0F6E56; --teal-800: #085041; --teal-900: #04342C;
+    --gray-50: #F8F7F4; --gray-100: #EEEDE8; --gray-200: #D3D1C7;
+    --gray-400: #888780; --gray-600: #5F5E5A; --gray-800: #2C2C2A;
+    --amber-50: #FAEEDA; --amber-200: #FAC775; --amber-400: #EF9F27; --amber-600: #BA7517;
+    --red-50: #FCEBEB; --red-200: #F09595; --red-400: #E24B4A; --red-600: #A32D2D;
+    --blue-50: #E6F1FB; --blue-200: #85B7EB; --blue-400: #378ADD; --blue-600: #185FA5;
+    --bg: #F8F7F4; --surface: #FFFFFF; --border: rgba(0,0,0,0.09);
+    --text: #2C2C2A; --muted: #888780; --subtle: #EEEDE8;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+  /* TOP BAR */
+  .topbar { background: var(--surface); border-bottom: 1px solid var(--border); padding: 0 24px; display: flex; align-items: center; justify-content: space-between; height: 56px; position: sticky; top: 0; z-index: 100; }
+  .topbar-title { font-family: 'DM Serif Display', serif; font-size: 22px; color: var(--teal-600); letter-spacing: -0.3px; }
+  .topbar-right { display: flex; gap: 8px; align-items: center; }
+  .top-btn { padding: 7px 14px; border-radius: 8px; font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.15s; display: flex; align-items: center; gap: 6px; }
+  .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text); }
+  .btn-outline:hover { background: var(--subtle); }
+  .btn-teal { background: var(--teal-400); border: 1px solid var(--teal-600); color: white; }
+  .btn-teal:hover { background: var(--teal-600); }
+  .btn-amber { background: var(--amber-50); border: 1px solid var(--amber-400); color: var(--amber-600); }
+  .btn-amber:hover { background: var(--amber-200); }
+  .month-nav { display: flex; align-items: center; gap: 8px; }
+  .nav-btn { width: 30px; height: 30px; border-radius: 6px; border: 1px solid var(--border); background: var(--surface); cursor: pointer; font-size: 16px; display: flex; align-items: center; justify-content: center; color: var(--text); }
+  .nav-btn:hover { background: var(--subtle); }
+  .month-label { font-size: 14px; font-weight: 500; min-width: 120px; text-align: center; color: var(--text); }
+
+  /* LAYOUT */
+  .layout { display: grid; grid-template-columns: 1fr 220px; gap: 16px; padding: 16px 24px; max-width: 1400px; margin: 0 auto; }
+  .left-col { display: flex; flex-direction: column; gap: 12px; }
+
+  /* TABLE CARD */
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; }
+  .card-header { padding: 12px 16px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+  .card-title { font-size: 14px; font-weight: 600; color: var(--text); }
+  .card-sub { font-size: 12px; color: var(--muted); }
+
+  .table-wrap { overflow-x: auto; }
+  table { border-collapse: collapse; width: 100%; font-size: 13px; }
+  thead th { background: var(--gray-50); font-weight: 500; font-size: 11px; color: var(--muted); padding: 6px 8px; border: 1px solid var(--border); text-align: center; position: sticky; top: 0; }
+  thead th.task-th { text-align: left; min-width: 180px; position: sticky; left: 0; background: var(--gray-50); z-index: 10; }
+  tbody td { border: 1px solid var(--border); padding: 5px 8px; vertical-align: middle; }
+  tbody td.task-td { position: sticky; left: 0; background: var(--surface); z-index: 5; min-width: 180px; }
+  tbody tr:hover td.task-td { background: var(--gray-50); }
+  tbody tr:hover td { background: var(--gray-50); }
+  .task-name-wrap { display: flex; align-items: center; gap: 6px; }
+  .task-name-text { flex: 1; cursor: pointer; padding: 2px 4px; border-radius: 4px; }
+  .task-name-text:hover { background: var(--subtle); }
+  .task-name-input { flex: 1; font-size: 13px; padding: 2px 6px; border: 1px solid var(--teal-400); border-radius: 4px; outline: none; font-family: 'DM Sans', sans-serif; }
+  .del-task-btn { width: 18px; height: 18px; border-radius: 50%; border: none; background: transparent; color: var(--muted); font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center; line-height: 1; flex-shrink: 0; }
+  .del-task-btn:hover { background: var(--red-50); color: var(--red-400); }
+  td.check-td { text-align: center; padding: 4px; }
+  td.check-td.today-col { background: rgba(29,158,117,0.06); }
+  td.check-td.past-col {
+  /*its okay*/ }
+  td.check-td.future-col { opacity: 0.4; }
+  th.today-th { background: var(--teal-400) !important; color: white !important; font-weight: 700 !important; }
+  input[type=checkbox] { width: 15px; height: 15px; accent-color: var(--teal-400); cursor: pointer; }
+  input[type=checkbox]:disabled { cursor: not-allowed; opacity: 0.35; }
+
+  .add-row td { padding: 6px 12px; background: var(--gray-50); }
+  .add-row-inner { display: flex; gap: 8px; align-items: center; }
+  .add-task-inp { flex: 1; max-width: 280px; font-size: 13px; padding: 6px 10px; border: 1px solid var(--border); border-radius: 8px; outline: none; font-family: 'DM Sans', sans-serif; background: var(--surface); }
+  .add-task-inp:focus { border-color: var(--teal-400); }
+  .add-task-btn { padding: 6px 14px; background: var(--teal-50); border: 1px solid var(--teal-200); color: var(--teal-600); border-radius: 8px; font-size: 13px; font-weight: 500; cursor: pointer; }
+  .add-task-btn:hover { background: var(--teal-200); }
+
+  /* MONTH HEADER ROWS */
+  .yr-row th { font-size: 10px; color: var(--muted); background: var(--gray-50) !important; padding: 3px 4px; }
+  .mo-row th { font-size: 11px; background: var(--teal-50) !important; color: var(--teal-600) !important; font-weight: 600; }
+  .mo-row th.today-th { background: var(--teal-400) !important; color: white !important; }
+  .day-row th { background: var(--gray-50) !important; font-size: 11px; }
+  .day-row th.today-th { background: var(--teal-400) !important; color: white !important; }
+
+  /* GOAL PANEL */
+  .goal-panel { display: flex; flex-direction: column; gap: 0; }
+  .goal-list { padding: 10px 12px; display: flex; flex-direction: column; gap: 6px; max-height: 260px; overflow-y: auto; }
+  .goal-item { background: var(--gray-50); border-radius: 8px; padding: 8px 10px; display: flex; gap: 6px; align-items: flex-start; border: 1px solid var(--border); transition: border-color 0.15s; }
+  .goal-item:hover { border-color: var(--teal-200); }
+  .goal-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--teal-400); margin-top: 5px; flex-shrink: 0; }
+  .goal-text { font-size: 12px; color: var(--text); flex: 1; line-height: 1.5; word-break: break-word; cursor: pointer; }
+  .goal-edit-inp { font-size: 12px; width: 100%; border: 1px solid var(--teal-400); border-radius: 4px; padding: 2px 5px; outline: none; font-family: 'DM Sans', sans-serif; }
+  .del-goal-btn { background: transparent; border: none; color: var(--muted); cursor: pointer; font-size: 15px; line-height: 1; padding: 0 2px; flex-shrink: 0; }
+  .del-goal-btn:hover { color: var(--red-400); }
+  .goal-add-row { padding: 10px 12px; border-top: 1px solid var(--border); display: flex; gap: 6px; }
+  .goal-inp { flex: 1; font-size: 12px; padding: 6px 8px; border: 1px solid var(--border); border-radius: 8px; outline: none; font-family: 'DM Sans', sans-serif; background: var(--surface); }
+  .goal-inp:focus { border-color: var(--teal-400); }
+  .goal-add-btn { padding: 6px 12px; background: var(--teal-50); border: 1px solid var(--teal-200); color: var(--teal-600); border-radius: 8px; font-size: 13px; font-weight: 500; cursor: pointer; }
+  .goal-add-btn:hover { background: var(--teal-200); }
+
+  /* STATS ROW */
+  .stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+  .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 12px 14px; }
+  .stat-val { font-size: 22px; font-weight: 600; color: var(--teal-400); font-family: 'DM Serif Display', serif; }
+  .stat-lbl { font-size: 11px; color: var(--muted); margin-top: 2px; }
+
+  /* CHART */
+  .chart-card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 14px 16px; }
+  .chart-hdr { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+
+  /* LEGEND */
+  .legend { display: flex; gap: 14px; font-size: 11px; color: var(--muted); }
+  .leg-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; margin-right: 4px; vertical-align: middle; }
+
+  /* TOOLTIP */
+  .tooltip { position: fixed; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 6px 10px; font-size: 12px; color: var(--text); pointer-events: none; z-index: 999; display: none; box-shadow: 0 4px 12px rgba(0,0,0,0.12); }
+
+  /* MODAL */
+  .modal-bg { position: fixed; inset: 0; background: rgba(0,0,0,0.35); z-index: 200; display: none; align-items: center; justify-content: center; }
+  .modal-bg.open { display: flex; }
+  .modal { background: var(--surface); border-radius: 16px; padding: 24px; width: 340px; }
+  .modal h3 { font-family: 'DM Serif Display', serif; font-size: 18px; margin-bottom: 14px; color: var(--teal-600); }
+  .modal p { font-size: 13px; color: var(--muted); margin-bottom: 16px; line-height: 1.6; }
+  .modal-btns { display: flex; gap: 8px; justify-content: flex-end; }
+
+  /* TOAST */
+  .toast { position: fixed; bottom: 24px; right: 24px; background: var(--teal-600); color: white; padding: 10px 18px; border-radius: 10px; font-size: 13px; z-index: 500; opacity: 0; transform: translateY(10px); transition: all 0.25s; pointer-events: none; }
+  .toast.show { opacity: 1; transform: translateY(0); }
+
+  /* SCROLLBAR */
+  ::-webkit-scrollbar { width: 5px; height: 5px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--gray-200); border-radius: 10px; }
+
+  @media (max-width: 900px) {
+    .layout { grid-template-columns: 1fr; }
+    .stats-row { grid-template-columns: repeat(2, 1fr); }
+  }
+  @media print {
+    .topbar-right, .add-row, .del-task-btn, .del-goal-btn, .goal-add-row { display: none !important; }
+  }
+</style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div class="topbar">
+  <div class="topbar-title">■ Progress Tracker</div>
+  <div class="topbar-right">
+    <div class="month-nav">
+      <button class="nav-btn" onclick="changeMonth(-1)">←</button>
+      <span class="month-label" id="monthLabel">April 2026</span>
+      <button class="nav-btn" onclick="changeMonth(1)">→</button>
+    </div>
+    <button class="top-btn btn-outline" onclick="jumpToToday()">● Today</button>
+    <button class="top-btn btn-amber" onclick="exportCSV()">⇓ Export CSV</button>
+    <button class="top-btn btn-teal" onclick="saveData()">✓ Save</button>
+  </div>
+</div>
+
+  
+  
+ 
+<!-- LAYOUT -->
+<div class="layout">
+  <div class="left-col">
+
+    <!-- STATS -->
+    <div class="stats-row">
+      <div class="stat-card"><div class="stat-val" id="s1">0</div><div class="stat-lbl">Today completed</div></div>
+      <div class="stat-card"><div class="stat-val" id="s2">5</div><div class="stat-lbl">Total tasks</div></div>
+      <div class="stat-card"><div class="stat-val" id="s3">0%</div><div class="stat-lbl">Today %</div></div>
+      <div class="stat-card"><div class="stat-val" id="s4">0</div><div class="stat-lbl">Best day streak</div></div>
+    </div>
+
+    <!-- TRACKER TABLE -->
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">Task Tracker</div>
+          <div class="card-sub">Click task name to rename • All days editable</div>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table id="mainTable">
+          <thead id="thead">
+    <tr class="yr-row"><th class="task-th" rowspan="1"></th><th class="" style="font-size:10px;color:#888780;padding:3px 4px;">2026</th><th class="" style="font-size:10px;color:#888780;padding:3px 4px;">2026</th><th class="" style="font-size:10px;color:#888780;padding:3px 4px;">2026</th><th class="" style="font-size:10px;color:#888780;padding:3px 4px;">2026</th><th class="" style="font-size:10px;color:#888780;padding:3px 4px;">2026</th><th class="" style="font-size:10px;color:#888780;padding:3px 4px;">2026</th><th class=" today-th" style="font-size:10px;color:white;padding:3px 4px;">2026</th><th class="" style="font-size:10px;color:#888780;padding:3px 4px;">2026</th><th class="" style="font-size:10px;color:#888780;padding:3px 4px;">2026</th><th class="" style="font-size:10px;color:#888780;padding:3px 4px;">2026</th><th class="" style="font-size:10px;color:#888780;padding:3px 4px;">2026</th><th class="" style="font-size:10px;color:#888780;padding:3px 4px;">2026</th><th class="" style="font-size:10px;color:#888780;padding:3px 4px;">2026</th><th class="" style="font-size:10px;color:#888780;padding:3px 4px;">2026</th><th class="" style="font-size:10px;color:#888780;padding:3px 4px;">2026</th><th class="" style="font-size:10px;color:#888780;padding:3px 4px;">2026</th><th class="" style="font-size:10px;color:#888780;padding:3px 4px;">2026</th><th class="" style="font-size:10px;color:#888780;padding:3px 4px;">2026</th><th class="" style="font-size:10px;color:#888780;padding:3px 4px;">2026</th><th class="" style="font-size:10px;color:#888780;padding:3px 4px;">2026</th><th class="" style="font-size:10px;color:#888780;padding:3px 4px;">2026</th><th class="" style="font-size:10px;color:#888780;padding:3px 4px;">2026</th><th class="" style="font-size:10px;color:#888780;padding:3px 4px;">2026</th><th class="" style="font-size:10px;color:#888780;padding:3px 4px;">2026</th><th class="" style="font-size:10px;color:#888780;padding:3px 4px;">2026</th><th class="" style="font-size:10px;color:#888780;padding:3px 4px;">2026</th><th class="" style="font-size:10px;color:#888780;padding:3px 4px;">2026</th><th class="" style="font-size:10px;color:#888780;padding:3px 4px;">2026</th><th class="" style="font-size:10px;color:#888780;padding:3px 4px;">2026</th><th class="" style="font-size:10px;color:#888780;padding:3px 4px;">2026</th></tr>
+    <tr class="mo-row"><th class="task-th"></th><th class="" style="font-size:10px;font-weight:600;">Apr</th><th class="" style="font-size:10px;font-weight:600;">Apr</th><th class="" style="font-size:10px;font-weight:600;">Apr</th><th class="" style="font-size:10px;font-weight:600;">Apr</th><th class="" style="font-size:10px;font-weight:600;">Apr</th><th class="" style="font-size:10px;font-weight:600;">Apr</th><th class=" today-th" style="font-size:10px;font-weight:600;">Apr</th><th class="" style="font-size:10px;font-weight:600;">Apr</th><th class="" style="font-size:10px;font-weight:600;">Apr</th><th class="" style="font-size:10px;font-weight:600;">Apr</th><th class="" style="font-size:10px;font-weight:600;">Apr</th><th class="" style="font-size:10px;font-weight:600;">Apr</th><th class="" style="font-size:10px;font-weight:600;">Apr</th><th class="" style="font-size:10px;font-weight:600;">Apr</th><th class="" style="font-size:10px;font-weight:600;">Apr</th><th class="" style="font-size:10px;font-weight:600;">Apr</th><th class="" style="font-size:10px;font-weight:600;">Apr</th><th class="" style="font-size:10px;font-weight:600;">Apr</th><th class="" style="font-size:10px;font-weight:600;">Apr</th><th class="" style="font-size:10px;font-weight:600;">Apr</th><th class="" style="font-size:10px;font-weight:600;">Apr</th><th class="" style="font-size:10px;font-weight:600;">Apr</th><th class="" style="font-size:10px;font-weight:600;">Apr</th><th class="" style="font-size:10px;font-weight:600;">Apr</th><th class="" style="font-size:10px;font-weight:600;">Apr</th><th class="" style="font-size:10px;font-weight:600;">Apr</th><th class="" style="font-size:10px;font-weight:600;">Apr</th><th class="" style="font-size:10px;font-weight:600;">Apr</th><th class="" style="font-size:10px;font-weight:600;">Apr</th><th class="" style="font-size:10px;font-weight:600;">Apr</th></tr>
+    <tr class="day-row"><th class="task-th"></th><th class="" style="font-size:10px;">We</th><th class="" style="font-size:10px;">Th</th><th class="" style="font-size:10px;">Fr</th><th class="" style="font-size:10px;">Sa</th><th class="" style="font-size:10px;">Su</th><th class="" style="font-size:10px;">Mo</th><th class=" today-th" style="font-size:10px;">Tu</th><th class="" style="font-size:10px;">We</th><th class="" style="font-size:10px;">Th</th><th class="" style="font-size:10px;">Fr</th><th class="" style="font-size:10px;">Sa</th><th class="" style="font-size:10px;">Su</th><th class="" style="font-size:10px;">Mo</th><th class="" style="font-size:10px;">Tu</th><th class="" style="font-size:10px;">We</th><th class="" style="font-size:10px;">Th</th><th class="" style="font-size:10px;">Fr</th><th class="" style="font-size:10px;">Sa</th><th class="" style="font-size:10px;">Su</th><th class="" style="font-size:10px;">Mo</th><th class="" style="font-size:10px;">Tu</th><th class="" style="font-size:10px;">We</th><th class="" style="font-size:10px;">Th</th><th class="" style="font-size:10px;">Fr</th><th class="" style="font-size:10px;">Sa</th><th class="" style="font-size:10px;">Su</th><th class="" style="font-size:10px;">Mo</th><th class="" style="font-size:10px;">Tu</th><th class="" style="font-size:10px;">We</th><th class="" style="font-size:10px;">Th</th></tr>
+    <tr class="day-row" style="font-weight:700;"><th class="task-th">Task</th><th class="" style="font-size:12px;min-width:34px;">1</th><th class="" style="font-size:12px;min-width:34px;">2</th><th class="" style="font-size:12px;min-width:34px;">3</th><th class="" style="font-size:12px;min-width:34px;">4</th><th class="" style="font-size:12px;min-width:34px;">5</th><th class="" style="font-size:12px;min-width:34px;">6</th><th class=" today-th" style="font-size:12px;min-width:34px;">7</th><th class="" style="font-size:12px;min-width:34px;">8</th><th class="" style="font-size:12px;min-width:34px;">9</th><th class="" style="font-size:12px;min-width:34px;">10</th><th class="" style="font-size:12px;min-width:34px;">11</th><th class="" style="font-size:12px;min-width:34px;">12</th><th class="" style="font-size:12px;min-width:34px;">13</th><th class="" style="font-size:12px;min-width:34px;">14</th><th class="" style="font-size:12px;min-width:34px;">15</th><th class="" style="font-size:12px;min-width:34px;">16</th><th class="" style="font-size:12px;min-width:34px;">17</th><th class="" style="font-size:12px;min-width:34px;">18</th><th class="" style="font-size:12px;min-width:34px;">19</th><th class="" style="font-size:12px;min-width:34px;">20</th><th class="" style="font-size:12px;min-width:34px;">21</th><th class="" style="font-size:12px;min-width:34px;">22</th><th class="" style="font-size:12px;min-width:34px;">23</th><th class="" style="font-size:12px;min-width:34px;">24</th><th class="" style="font-size:12px;min-width:34px;">25</th><th class="" style="font-size:12px;min-width:34px;">26</th><th class="" style="font-size:12px;min-width:34px;">27</th><th class="" style="font-size:12px;min-width:34px;">28</th><th class="" style="font-size:12px;min-width:34px;">29</th><th class="" style="font-size:12px;min-width:34px;">30</th></tr></thead>
+          <tbody id="tbody"><tr><td class="task-td">
+      <div class="task-name-wrap">
+        <span class="task-name-text" id="tn-4" onclick="startRenameTask(4)" title="Click to rename">2lec of LA</span>
+        <button class="del-task-btn" onclick="confirmDelete(4,'2lec of LA')">×</button>
+      </div>
+    </td><td class="check-td past-col">
+        <input type="checkbox" onchange="setCheck(4,'2026-04-01',this.checked ? 1 : 0)">
+      </td><td class="check-td past-col">
+        <input type="checkbox" onchange="setCheck(4,'2026-04-02',this.checked ? 1 : 0)">
+      </td><td class="check-td past-col">
+        <input type="checkbox" onchange="setCheck(4,'2026-04-03&',this.checked ? 1 : 0)">
+      </td><td class="check-td past-col">
+        <input type="checkbox" onchange="setCheck(4,'2026-04-04',this.checked ? 1 : 0)">
+      </td><td class="check-td past-col">
+        <input type="checkbox" onchange="setCheck(4,'2026-04-05',this.checked ? 1 : 0)">
+      </td><td class="check-td past-col">
+        <input type="checkbox" onchange="setCheck(4,'2026-04-06',this.checked ? 1 : 0)">
+      </td><td class="check-td today-col">
+        <input type="checkbox" onchange="setCheck(4,'2026-04-07',this.checked ? 1 : 0)">
+      </td><td class="check-td future-col">
+        <input type="checkbox" onchange="setCheck(4,'2026-04-08',this.checked ? 1 : 0)">
+      </td><td class="check-td future-col">
+        <input type="checkbox" onchange="setCheck(4,'2026-04-09',this.checked ? 1 : 0)">
+      </td><td class="check-td future-col">
+        <input type="checkbox" onchange="setCheck(4,'2026-04-10',this.checked ? 1 : 0)">
+      </td><td class="check-td future-col">
+        <input type="checkbox" onchange="setCheck(4,'2026-04-11',this.checked ? 1 : 0)">
+      </td><td class="check-td future-col">
+        <input type="checkbox" onchange="setCheck(4,'2026-04-12',this.checked ? 1 : 0)">
+      </td><td class="check-td future-col">
+        <input type="checkbox" onchange="setCheck(4,'2026-04-13',this.checked ? 1 : 0)">
+      </td><td class="check-td future-col">
+        <input type="checkbox" onchange="setCheck(4,'2026-04-14',this.checked ? 1 : 0)">
+      </td><td class="check-td future-col">
+        <input type="checkbox" onchange="setCheck(4,'2026-04-15',this.checked ? 1 : 0)">
+      </td><td class="check-td future-col">
+        <input type="checkbox" onchange="setCheck(4,'2026-04-16',this.checked ? 1 : 0)">
+      </td><td class="check-td future-col">
+        <input type="checkbox" onchange="setCheck(4,'2026-04-17',this.checked ? 1 : 0)">
+      </td><td class="check-td future-col">
+        <input type="checkbox" onchange="setCheck(4,'2026-04-18',this.checked ? 1 : 0)">
+      </td><td class="check-td future-col">
+        <input type="checkbox" onchange="setCheck(4,'2026-04-19',this.checked ? 1 : 0)">
+      </td><td class="check-td future-col">
+        <input type="checkbox" onchange="setCheck(4,'2026-04-20',this.checked ? 1 : 0)">
+      </td><td class="check-td future-col">
+        <input type="checkbox" onchange="setCheck(4,'2026-04-21',this.checked ? 1 : 0)">
+      </td><td class="check-td future-col">
+        <input type="checkbox" onchange="setCheck(4,'2026-04-22',this.checked ? 1 : 0)">
+      </td><td class="check-td future-col">
+        <input type="checkbox" onchange="setCheck(4,'2026-04-23',this.checked ? 1 : 0)">
+      </td><td class="check-td future-col">
+        <input type="checkbox" onchange="setCheck(4,'2026-04-24',this.checked ? 1 : 0)">
+      </td><td class="check-td future-col">
+        <input type="checkbox" onchange="setCheck(4,'2026-04-25',this.checked ? 1 : 0)">
+      </td><td class="check-td future-col">
+        <input type="checkbox" onchange="setCheck(4,'2026-04-26',this.checked ? 1 : 0)">
+      </td><td class="check-td future-col">
+        <input type="checkbox" onchange="setCheck(4,'2026-04-27',this.checked ? 1 : 0)">
+      </td><td class="check-td future-col">
+        <input type="checkbox" onchange="setCheck(4,'2026-04-28',this.checked ? 1 : 0)">
+      </td><td class="check-td future-col">
+        <input type="checkbox" onchange="setCheck(4,'2026-04-29',this.checked ? 1 : 0)">
+      </td><td class="check-td future-col">
+        <input type="checkbox" onchange="setCheck(4,'2026-04-30',this.checked ? 1 : 0)">
+      </td></tr><tr><td class="task-td">
+      <div class="task-name-wrap">
+        <span class="task-name-text" id="tn-5" onclick="startRenameTask(5)" title="Click to rename">code 4hr</span>
+        <button class="del-task-btn" onclick="confirmDelete(5,'code 4hr')">×</button>
+      </div>
+    </td><td class="check-td past-col">
+        <input type="checkbox" onchange="setCheck(5,'2026-04-01',this.checked ? 1 : 0)">
+      </td><td class="check-td past-col">
+        <input type="checkbox" onchange="setCheck(5,'2026-04-02',this.checked ? 1 : 0)">
+      </td><td class="check-td past-col">
+        <input type="checkbox" onchange="setCheck(5,'2026-04-03',this.checked ? 1 : 0)">
+      </td><td class="check-td past-col">
+        <input type="checkbox" onchange="setCheck(5,'2026-04-04',this.checked ? 1 : 0)">
+      </td><td class="check-td past-col">
+        <input type="checkbox" onchange="setCheck(5,'2026-04-05',this.checked ? 1 : 0)">
+      </td><td class="check-td past-col">
+        <input type="checkbox" onchange="setCheck(5,'2026-04-06',this.checked ? 1 : 0)">
+      </td><td class="check-td today-col">
+        <input type="checkbox" onchange="setCheck(5,'2026-04-07',this.checked ? 1 : 0)">
+      </td><td class="check-td future-col">
+        <input type="checkbox" onchange="setCheck(5,'2026-04-08',this.checked ? 1 : 0)">
+      </td><td class="check-td future-col">
+        <input type="checkbox" onchange="setCheck(5,'2026-04-09',this.checked ? 1 : 0)">
+      </td><td class="check-td future-col">
+        <input type="checkbox" onchange="setCheck(5,'2026-04-10',this.checked ? 1 : 0)">
+      </td><td class="check-td future-col">
+        <input type="checkbox" onchange="setCheck(5,'2026-04-11',this.checked ? 1 : 0)">
+      </td><td class="check-td future-col">
+        <input type="checkbox" onchange="setCheck(5,'2026-04-12',this.checked ? 1 : 0)">
+      </td><td class="check-td future-col">
+        <input type="checkbox" onchange="setCheck(5,'2026-04-13',this.checked ? 1 : 0)">
+      </td><td class="check-td future-col">
+        <input type="checkbox" onchange="setCheck(5,'2026-04-14',this.checked ? 1 : 0)">
+      </td><td class="check-td future-col">
+        <input type="checkbox" onchange="setCheck(5,'2026-04-15',this.checked ? 1 : 0)">
+      </td><td class="check-td future-col">
+        <input type="checkbox" onchange="setCheck(5,'2026-04-16',this.checked ? 1 : 0)">
+      </td><td class="check-td future-col">
+        <input type="checkbox" onchange="setCheck(5,'2026-04-17',this.checked ? 1 : 0)">
+      </td><td class="check-td future-col">
+        <input type="checkbox" onchange="setCheck(5,'2026-04-18',this.checked ? 1 : 0)">
+      </td><td class="check-td future-col">
+        <input type="checkbox" onchange="setCheck(5,'2026-04-19',this.checked ? 1 : 0)">
+      </td><td class="check-td future-col">
+        <input type="checkbox" onchange="setCheck(5,'2026-04-20',this.checked ? 1 : 0)">
+      </td><td class="check-td future-col">
+        <input type="checkbox" onchange="setCheck(5,'2026-04-21',this.checked ? 1 : 0)">
+      </td><td class="check-td future-col">
+        <input type="checkbox" onchange="setCheck(5,'2026-04-22',this.checked ? 1 : 0)">
+      </td><td class="check-td future-col">
+        <input type="checkbox" onchange="setCheck(5,'2026-04-23',this.checked ? 1 : 0)">
+      </td><td class="check-td future-col">
+        <input type="checkbox" onchange="setCheck(5,'2026-04-24',this.checked ? 1 : 0)">
+      </td><td class="check-td future-col">
+        <input type="checkbox" onchange="setCheck(5,'2026-04-25',this.checked ? 1 : 0)">
+      </td><td class="check-td future-col">
+        <input type="checkbox" onchange="setCheck(5,'2026-04-26',this.checked ? 1 : 0)">
+      </td><td class="check-td future-col">
+        <input type="checkbox" onchange="setCheck(5,'2026-04-27',this.checked ? 1 : 0)">
+      </td><td class="check-td future-col">
+        <input type="checkbox" onchange="setCheck(5,'2026-04-28',this.checked ? 1 : 0)">
+      </td><td class="check-td future-col">
+        <input type="checkbox" onchange="setCheck(5,'2026-04-29',this.checked ? 1 : 0)">
+      </td><td class="check-td future-col">
+        <input type="checkbox" onchange="setCheck(5,'2026-04-30',this.checked ? 1 : 0)">
+      </td></tr><tr><td class="task-td">
+      <div class="task-name-wrap">
+        <span class="task-name-text" id="tn-6" onclick="startRenameTask(6)" title="Click to rename">aptitude practice daily 2hr</span>
+        <button class="del-task-btn" onclick="confirmDelete(6,'aptitude practice daily 2hr')">×</button>
+      </div>
+    </td><td class="check-td past-col">
+        <input type="checkbox" onchange="setCheck(6,'2026-04-01',this.checked ? 1 : 0)">
+      </td><td class="check-td past-col">
+        <input type="checkbox" onchange="setCheck(6,'2026-04-02',this.checked ? 1 : 0)">
+      </td><td class="check-td past-col">
+        <input type="checkbox" onchange="setCheck(6,'2026-04-03',this.checked ? 1 : 0)">
+      </td><td class="check-td past-col">
+        <input type="checkbox" onchange="setCheck(6,'2026-04-04',this.checked ? 1 : 0)">
+      </td><td class="check-td past-col">
+        <input type="checkbox" onchange="setCheck(6,'2026-04-05',this.checked ? 1 : 0)">
+      </td><td class="check-td past-col">
+        <input type="checkbox" onchange="setCheck(6,'2026-04-06',this.checked ? 1 : 0)">
+      </td><td class="check-td today-col">
+        <input type="checkbox" onchange="setCheck(6,'2026-04-07',this.checked ? 1 : 0)">
+      </td><td class="check-td future-col">
+        <input type="checkbox" onchange="setCheck(6,'2026-04-08',this.checked ? 1 : 0)">
+      </td><td class="check-td future-col">
+        <input type="checkbox" onchange="setCheck(6,'2026-04-09',this.checked ? 1 : 0)">
+      </td><td class="check-td future-col">
+        <input type="checkbox" onchange="setCheck(6,'2026-04-10',this.checked ? 1 : 0)">
+      </td><td class="check-td future-col">
+        <input type="checkbox" onchange="setCheck(6,'2026-04-11',this.checked ? 1 : 0)">
+      </td><td class="check-td future-col">
+        <input type="checkbox" onchange="setCheck(6,'2026-04-12',this.checked ? 1 : 0)">
+      </td><td class="check-td future-col">
+        <input type="checkbox" onchange="setCheck(6,'2026-04-13',this.checked ? 1 : 0)">
+      </td><td class="check-td future-col">
+        <input type="checkbox" onchange="setCheck(6,'2026-04-14',this.checked ? 1 : 0)">
+      </td><td class="check-td future-col">
+        <input type="checkbox" onchange="setCheck(6,'2026-04-15',this.checked ? 1 : 0)">
+      </td><td class="check-td future-col">
+        <input type="checkbox" onchange="setCheck(6,'2026-04-16',this.checked ? 1 : 0)">
+      </td><td class="check-td future-col">
+        <input type="checkbox" onchange="setCheck(6,'2026-04-17',this.checked ? 1 : 0)">
+      </td><td class="check-td future-col">
+        <input type="checkbox" onchange="setCheck(6,'2026-04-18',this.checked ? 1 : 0)">
+      </td><td class="check-td future-col">
+        <input type="checkbox" onchange="setCheck(6,'2026-04-19',this.checked ? 1 : 0)">
+      </td><td class="check-td future-col">
+        <input type="checkbox" onchange="setCheck(6,'2026-04-20',this.checked ? 1 : 0)">
+      </td><td class="check-td future-col">
+        <input type="checkbox" onchange="setCheck(6,'2026-04-21',this.checked ? 1 : 0)">
+      </td><td class="check-td future-col">
+        <input type="checkbox" onchange="setCheck(6,'2026-04-22',this.checked ? 1 : 0)">
+      </td><td class="check-td future-col">
+        <input type="checkbox" onchange="setCheck(6,'2026-04-23',this.checked ? 1 : 0)">
+      </td><td class="check-td future-col">
+        <input type="checkbox" onchange="setCheck(6,'2026-04-24',this.checked ? 1 : 0)">
+      </td><td class="check-td future-col">
+        <input type="checkbox" onchange="setCheck(6,'2026-04-25',this.checked ? 1 : 0)">
+      </td><td class="check-td future-col">
+        <input type="checkbox" onchange="setCheck(6,'2026-04-26',this.checked ? 1 : 0)">
+      </td><td class="check-td future-col">
+        <input type="checkbox" onchange="setCheck(6,'2026-04-27',this.checked ? 1 : 0)">
+      </td><td class="check-td future-col">
+        <input type="checkbox" onchange="setCheck(6,'2026-04-28',this.checked ? 1 : 0)">
+      </td><td class="check-td future-col">
+        <input type="checkbox" onchange="setCheck(6,'2026-04-29',this.checked ? 1 : 0)">
+      </td><td class="check-td future-col">
+        <input type="checkbox" onchange="setCheck(6,'2026-04-30',this.checked ? 1 : 0)">
+      </td></tr><tr><td class="task-td">
+      <div class="task-name-wrap">
+        <span class="task-name-text" id="tn-7" onclick="startRenameTask(7)" title="Click to rename">revision</span>
+        <button class="del-task-btn" onclick="confirmDelete(7,'revision')">×</button>
+      </div>
+    </td><td class="check-td past-col">
+        <input type="checkbox" onchange="setCheck(7,'2026-04-01',this.checked ? 1 : 0)">
+      </td><td class="check-td past-col">
+        <input type="checkbox" onchange="setCheck(7,'2026-04-02',this.checked ? 1 : 0)">
+      </td><td class="check-td past-col">
+        <input type="checkbox" onchange="setCheck(7,'2026-04-03',this.checked ? 1 : 0)">
+      </td><td class="check-td past-col">
+        <input type="checkbox" onchange="setCheck(7,'2026-04-04',this.checked ? 1 : 0)">
+      </td><td class="check-td past-col">
+        <input type="checkbox" onchange="setCheck(7,'2026-04-05',this.checked ? 1 : 0)">
+      </td><td class="check-td past-col">
+        <input type="checkbox" onchange="setCheck(7,'2026-04-06',this.checked ? 1 : 0)">
+      </td><td class="check-td today-col">
+        <input type="checkbox" onchange="setCheck(7,'2026-04-07',this.checked ? 1 : 0)">
+      </td><td class="check-td future-col">
+        <input type="checkbox" onchange="setCheck(7,'2026-04-08',this.checked ? 1 : 0)">
+      </td><td class="check-td future-col">
+        <input type="checkbox" onchange="setCheck(7,'2026-04-09',this.checked ? 1 : 0)">
+      </td><td class="check-td future-col">
+        <input type="checkbox" onchange="setCheck(7,'2026-04-10',this.checked ? 1 : 0)">
+      </td><td class="check-td future-col">
+        <input type="checkbox" onchange="setCheck(7,'2026-04-11',this.checked ? 1 : 0)">
+      </td><td class="check-td future-col">
+        <input type="checkbox" onchange="setCheck(7,'2026-04-12',this.checked ? 1 : 0)">
+      </td><td class="check-td future-col">
+        <input type="checkbox" onchange="setCheck(7,'2026-04-13',this.checked ? 1 : 0)">
+      </td><td class="check-td future-col">
+        <input type="checkbox" onchange="setCheck(7,'2026-04-14',this.checked ? 1 : 0)">
+      </td><td class="check-td future-col">
+        <input type="checkbox" onchange="setCheck(7,'2026-04-15',this.checked ? 1 : 0)">
+      </td><td class="check-td future-col">
+        <input type="checkbox" onchange="setCheck(7,'2026-04-16',this.checked ? 1 : 0)">
+      </td><td class="check-td future-col">
+        <input type="checkbox" onchange="setCheck(7,'2026-04-17',this.checked ? 1 : 0)">
+      </td><td class="check-td future-col">
+        <input type="checkbox" onchange="setCheck(7,'2026-04-18',this.checked ? 1 : 0)">
+      </td><td class="check-td future-col">
+        <input type="checkbox" onchange="setCheck(7,'2026-04-19',this.checked ? 1 : 0)">
+      </td><td class="check-td future-col">
+        <input type="checkbox" onchange="setCheck(7,'2026-04-20',this.checked ? 1 : 0)">
+      </td><td class="check-td future-col">
+        <input type="checkbox" onchange="setCheck(7,'2026-04-21',this.checked ? 1 : 0)">
+      </td><td class="check-td future-col">
+        <input type="checkbox" onchange="setCheck(7,'2026-04-22',this.checked ? 1 : 0)">
+      </td><td class="check-td future-col">
+        <input type="checkbox" onchange="setCheck(7,'2026-04-23',this.checked ? 1 : 0)">
+      </td><td class="check-td future-col">
+        <input type="checkbox" onchange="setCheck(7,'2026-04-24',this.checked ? 1 : 0)">
+      </td><td class="check-td future-col">
+        <input type="checkbox" onchange="setCheck(7,'2026-04-25',this.checked ? 1 : 0)">
+      </td><td class="check-td future-col">
+        <input type="checkbox" onchange="setCheck(7,'2026-04-26',this.checked ? 1 : 0)">
+      </td><td class="check-td future-col">
+        <input type="checkbox" onchange="setCheck(7,'2026-04-27',this.checked ? 1 : 0)">
+      </td><td class="check-td future-col">
+        <input type="checkbox" onchange="setCheck(7,'2026-04-28',this.checked ? 1 : 0)">
+      </td><td class="check-td future-col">
+        <input type="checkbox" onchange="setCheck(7,'2026-04-29',this.checked ? 1 : 0)">
+      </td><td class="check-td future-col">
+        <input type="checkbox" onchange="setCheck(7,'2026-04-30',this.checked ? 1 : 0)">
+      </td></tr><tr><td class="task-td">
+      <div class="task-name-wrap">
+        <span class="task-name-text" id="tn-8" onclick="startRenameTask(8)" title="Click to rename">dbms</span>
+        <button class="del-task-btn" onclick="confirmDelete(8,'dbms')">×</button>
+      </div>
+    </td><td class="check-td past-col">
+        <input type="checkbox" onchange="setCheck(8,'2026-04-01',this.checked ? 1 : 0)">
+      </td><td class="check-td past-col">
+        <input type="checkbox" onchange="setCheck(8,'2026-04-02',this.checked ? 1 : 0)">
+      </td><td class="check-td past-col">
+        <input type="checkbox" onchange="setCheck(8,'2026-04-03',this.checked ? 1 : 0)">
+      </td><td class="check-td past-col">
+        <input type="checkbox" onchange="setCheck(8,'2026-04-04',this.checked ? 1 : 0)">
+      </td><td class="check-td past-col">
+        <input type="checkbox" onchange="setCheck(8,'2026-04-05',this.checked ? 1 : 0)">
+      </td><td class="check-td past-col">
+        <input type="checkbox" onchange="setCheck(8,'2026-04-06',this.checked ? 1 : 0)">
+      </td><td class="check-td today-col">
+        <input type="checkbox" onchange="setCheck(8,'2026-04-07',this.checked ? 1 : 0)">
+      </td><td class="check-td future-col">
+        <input type="checkbox" onchange="setCheck(8,'2026-04-08',this.checked ? 1 : 0)">
+      </td><td class="check-td future-col">
+        <input type="checkbox" onchange="setCheck(8,'2026-04-09',this.checked ? 1 : 0)">
+      </td><td class="check-td future-col">
+        <input type="checkbox" onchange="setCheck(8,'2026-04-10',this.checked ? 1 : 0)">
+      </td><td class="check-td future-col">
+        <input type="checkbox" onchange="setCheck(8,'2026-04-11',this.checked ? 1 : 0)">
+      </td><td class="check-td future-col">
+        <input type="checkbox" onchange="setCheck(8,'2026-04-12',this.checked ? 1 : 0)">
+      </td><td class="check-td future-col">
+        <input type="checkbox" onchange="setCheck(8,'2026-04-13',this.checked ? 1 : 0)">
+      </td><td class="check-td future-col">
+        <input type="checkbox" onchange="setCheck(8,'2026-04-14',this.checked ? 1 : 0)">
+      </td><td class="check-td future-col">
+        <input type="checkbox" onchange="setCheck(8,'2026-04-15',this.checked ? 1 : 0)">
+      </td><td class="check-td future-col">
+        <input type="checkbox" onchange="setCheck(8,'2026-04-16',this.checked ? 1 : 0)">
+      </td><td class="check-td future-col">
+        <input type="checkbox" onchange="setCheck(8,'2026-04-17',this.checked ? 1 : 0)">
+      </td><td class="check-td future-col">
+        <input type="checkbox" onchange="setCheck(8,'2026-04-18',this.checked ? 1 : 0)">
+      </td><td class="check-td future-col">
+        <input type="checkbox" onchange="setCheck(8,'2026-04-19',this.checked ? 1 : 0)">
+      </td><td class="check-td future-col">
+        <input type="checkbox" onchange="setCheck(8,'2026-04-20',this.checked ? 1 : 0)">
+      </td><td class="check-td future-col">
+        <input type="checkbox" onchange="setCheck(8,'2026-04-21',this.checked ? 1 : 0)">
+      </td><td class="check-td future-col">
+        <input type="checkbox" onchange="setCheck(8,'2026-04-22',this.checked ? 1 : 0)">
+      </td><td class="check-td future-col">
+        <input type="checkbox" onchange="setCheck(8,'2026-04-23',this.checked ? 1 : 0)">
+      </td><td class="check-td future-col">
+        <input type="checkbox" onchange="setCheck(8,'2026-04-24',this.checked ? 1 : 0)">
+      </td><td class="check-td future-col">
+        <input type="checkbox" onchange="setCheck(8,'2026-04-25',this.checked ? 1 : 0)">
+      </td><td class="check-td future-col">
+        <input type="checkbox" onchange="setCheck(8,'2026-04-26',this.checked ? 1 : 0)">
+      </td><td class="check-td future-col">
+        <input type="checkbox" onchange="setCheck(8,'2026-04-27',this.checked ? 1 : 0)">
+      </td><td class="check-td future-col">
+        <input type="checkbox" onchange="setCheck(8,'2026-04-28',this.checked ? 1 : 0)">
+      </td><td class="check-td future-col">
+        <input type="checkbox" onchange="setCheck(8,'2026-04-29',this.checked ? 1 : 0)">
+      </td><td class="check-td future-col">
+        <input type="checkbox" onchange="setCheck(8,'2026-04-30',this.checked ? 1 : 0)">
+      </td></tr><tr class="add-row"><td colspan="31">
+    <div class="add-row-inner">
+      <input class="add-task-inp" id="addTaskInp" placeholder="New task name..." onkeydown="if(event.key==='Enter')addTask()">
+      <button class="add-task-btn" onclick="addTask()">+ Add Task</button>
+    </div>
+  </td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- CHART -->
+    <div class="chart-card">
+      <div class="chart-hdr">
+        <div>
+          <div class="card-title">Daily Progress Report</div>
+          <div class="card-sub">Completion % per day — hover for details</div>
+        </div>
+        <div class="legend">
+          <span><span class="leg-dot" style="background:#1D9E75"></span>Completion %</span>
+          <span><span class="leg-dot" style="background:#EF9F27"></span>Today</span>
+        </div>
+      </div>
+      <div style="position:relative;width:100%;height:220px;">
+        <canvas id="chart" width="1172" height="220" style="display: block; box-sizing: border-box; height: 220px; width: 1172px;"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- GOAL PANEL -->
+  <div class="card goal-panel" style="align-self:start;">
+    <div class="card-header"><div class="card-title">Goals</div><div class="card-sub" id="goalCount">2 goals</div></div>
+    <div class="goal-list" id="goalList">
+    <div class="goal-item">
+      <span class="goal-dot"></span>
+      <span class="goal-text" id="gt-0" onclick="startEditGoal(0)" title="Click to edit">complete linear algebra</span>
+      <button class="del-goal-btn" onclick="deleteGoal(0)">×</button>
+    </div>
+    <div class="goal-item">
+      <span class="goal-dot"></span>
+      <span class="goal-text" id="gt-1" onclick="startEditGoal(1)" title="Click to edit">complete dsa</span>
+      <button class="del-goal-btn" onclick="deleteGoal(1)">×</button>
+    </div></div>
+
+
+    <div class="goal-add-row">
+      <input class="goal-inp" id="goalInp" placeholder="Add a goal...">
+      <button class="goal-add-btn" onclick="addGoal()">+</button>
+    </div>
+  </div>
+  <!-- ✅ Completed Goals INSIDE -->
+  <div style="margin-top:15px;">
+    <h4>Completed Goals</h4>
+    <div id="completedGoalsList"></div>
+    </div> <!-- goal-list END -->
+
+</div>
+
+<!-- TOOLTIP -->
+<div class="tooltip" id="tooltip"></div>
+
+<!-- CONFIRM MODAL -->
+<div class="modal-bg" id="confirmModal">
+  <div class="modal">
+    <h3>Remove Task?</h3>
+    <p id="confirmMsg">Delete "Review notes" and all its progress data?</p>
+    <div class="modal-btns">
+      <button class="top-btn btn-outline" onclick="closeModal()">Cancel</button>
+      <button class="top-btn" style="background:#E24B4A;border:1px solid #A32D2D;color:white;" id="confirmOk">Delete</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast">Saved!</div>
+
+<script>
+// ─── STATE ───────────────────────────────────────────────────────────────────
+const now = new Date();
+let viewYear = now.getFullYear();
+let viewMonth = now.getMonth(); // 0-indexed
+
+let state = loadState();
+
+function defaultState() {
+  return {
+    tasks: [
+      { id: 1, name: 'Morning workout' },
+      { id: 2, name: 'Read 30 minutes' },
+      { id: 3, name: 'Review notes' },
+    ],
+    checks: {}, // checks[taskId][YYYY-MM-DD] = true/false
+    goals: ['Finish project by end of month', 'Run 5km three times a week'],
+    nextId: 4,
+  };
+}
+function loadState() {
+  try { const s = localStorage.getItem('ptstate'); return s ? JSON.parse(s) : defaultState(); }
+  catch { return defaultState(); }
+}
+function saveData() {
+  try { localStorage.setItem('ptstate', JSON.stringify(state)); toast('Saved!'); }
+  catch { toast('Save failed'); }
+}
+
+// ─── DATES ───────────────────────────────────────────────────────────────────
+function daysInMonth(y, m) { return new Date(y, m + 1, 0).getDate(); }
+function dateStr(y, m, d) { return `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`; }
+function todayStr() { return dateStr(now.getFullYear(), now.getMonth(), now.getDate()); }
+function isToday(y, m, d) { return y === now.getFullYear() && m === now.getMonth() && d === now.getDate(); }
+function isPast(y, m, d) {
+  const t = new Date(y, m, d); const n = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  return t < n;
+}
+function isFuture(y, m, d) {
+  const t = new Date(y, m, d); const n = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  return t > n;
+}
+const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+const WDAYS = ['Su','Mo','Tu','We','Th','Fr','Sa'];
+
+function changeMonth(dir) {
+  viewMonth += dir;
+  if (viewMonth < 0) { viewMonth = 11; viewYear--; }
+  if (viewMonth > 11) { viewMonth = 0; viewYear++; }
+  render();
+}
+function jumpToToday() {
+  viewYear = now.getFullYear(); viewMonth = now.getMonth();
+  render();
+  setTimeout(() => {
+    const todayTh = document.querySelector('.today-th');
+    if (todayTh) todayTh.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+  }, 100);
+}
+
+// ─── CHECKS ──────────────────────────────────────────────────────────────────
+function getCheck(tid, ds) { return !!(state.checks[tid] && state.checks[tid][ds]); }
+function setCheck(tid, ds, val) {
+  if (!state.checks[tid]) state.checks[tid] = {};
+  state.checks[tid][ds] = val;
+  updateStats(); updateChart();
+}
+
+// ─── TASKS ───────────────────────────────────────────────────────────────────
+async function addTask() {
+  const inp1 = document.getElementById('addTaskInp');
+  const inp2 = document.getElementById('taskInput');
+
+  const name = (inp1?.value || inp2?.value || "").trim();
+
+  if (!name) {
+    alert("Enter task name!");
+    return;
+  }
+
+  try {
+    const res = await fetch("http://localhost:3000/api/tasks", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ name })
+    });
+
+    const data = await res.json();
+
+    console.log("Task added:", data);
+
+    // 🔥 USE DB ID (IMPORTANT)
+    state.tasks.push({
+      id: data.taskId,
+      name
+    });
+
+    if (inp1) inp1.value = "";
+    if (inp2) inp2.value = "";
+
+    render();
+
+  } catch (err) {
+    console.error("Error adding task:", err);
+  }
+}
+let pendingDeleteId = null;
+function confirmDelete(id, name) {
+  pendingDeleteId = id;
+  document.getElementById('confirmMsg').textContent = `Delete "${name}" and all its progress data?`;
+  document.getElementById('confirmModal').classList.add('open');
+  document.getElementById('confirmOk').onclick = () => { doDelete(); closeModal(); };
+}
+function doDelete() {
+  if (!pendingDeleteId) return;
+  state.tasks = state.tasks.filter(t => t.id !== pendingDeleteId);
+  delete state.checks[pendingDeleteId];
+  pendingDeleteId = null;
+  saveData(); render();
+}
+function closeModal() { document.getElementById('confirmModal').classList.remove('open'); }
+
+function startRenameTask(id) {
+  const span = document.getElementById(`tn-${id}`);
+  const wrap = span.parentElement;
+  const inp = document.createElement('input');
+  inp.className = 'task-name-input';
+  inp.value = state.tasks.find(t => t.id === id).name;
+  wrap.replaceChild(inp, span);
+  inp.focus(); inp.select();
+  function commit() {
+    const v = inp.value.trim();
+    if (v) state.tasks.find(t => t.id === id).name = v;
+    saveData(); render();
+  }
+  inp.onblur = commit;
+  inp.onkeydown = e => { if (e.key === 'Enter') commit(); if (e.key === 'Escape') render(); };
+}
+
+// ─── GOALS ───────────────────────────────────────────────────────────────────
+function addGoal() {
+  const inp = document.getElementById('goalInp');
+  const g = inp.value.trim();
+  if (!g) return;
+  state.goals.push(g);
+  inp.value = '';
+  saveData(); renderGoals();
+}
+function deleteGoal(i) {
+  const goal = state.goals[i];
+
+  // 🔥 अगर completedGoals नहीं है तो बना दो
+  if (!state.completedGoals) state.completedGoals = [];
+
+  // 🔥 move to completed
+  state.completedGoals.push(goal);
+
+  // remove from active
+  state.goals.splice(i, 1);
+
+  saveData();
+  renderGoals();
+}
+function startEditGoal(i) {
+  const span = document.getElementById(`gt-${i}`);
+  const inp = document.createElement('input');
+  inp.className = 'goal-edit-inp';
+  inp.value = state.goals[i];
+  span.parentElement.replaceChild(inp, span);
+  inp.focus(); inp.select();
+  function commit() {
+    const v = inp.value.trim();
+    if (v) state.goals[i] = v;
+    saveData(); renderGoals();
+  }
+  inp.onblur = commit;
+  inp.onkeydown = e => { if (e.key === 'Enter') commit(); if (e.key === 'Escape') renderGoals(); };
+}
+function renderCompletedGoals() {
+  const list = document.getElementById('completedGoalsList');
+
+  if (!list) return;
+
+  if (!state.completedGoals || !state.completedGoals.length) {
+    list.innerHTML = '<div style="font-size:12px;color:#888780;">No completed goals</div>';
+    return;
+  }
+
+  list.innerHTML = state.completedGoals.map(g => `
+    <div style="padding:6px; opacity:0.6;">
+      ✅ <span style="text-decoration:line-through;">${g}</span>
+    </div>
+  `).join('');
+}
+function renderGoals() {
+  const list = document.getElementById('goalList');
+  document.getElementById('goalCount').textContent = state.goals.length + ' goal' + (state.goals.length !== 1 ? 's' : '');
+  if (!state.goals.length) {
+    list.innerHTML = '<div style="font-size:12px;color:#888780;padding:4px 2px;">No goals yet. Add one below!</div>';
+    return;
+  }
+  list.innerHTML = state.goals.map((g, i) => `
+    <div class="goal-item">
+      <span class="goal-dot"></span>
+      <span class="goal-text" id="gt-${i}" onclick="startEditGoal(${i})" title="Click to edit">${g}</span>
+      <button class="del-goal-btn" onclick="deleteGoal(${i})">&#215;</button>
+    </div>`).join('');
+    renderCompletedGoals();
+}
+
+// ─── RENDER TABLE ────────────────────────────────────────────────────────────
+function render() {
+  document.getElementById('monthLabel').textContent = `${MONTHS[viewMonth]} ${viewYear}`;
+  const days = daysInMonth(viewYear, viewMonth);
+  const thead = document.getElementById('thead');
+  const tbody = document.getElementById('tbody');
+
+  // Build header rows: year / month / weekday / date
+  let yrCells = `<th class="task-th" rowspan="1"></th>`;
+  let moCells = `<th class="task-th"></th>`;
+  let wdCells = `<th class="task-th"></th>`;
+  let dyCells = `<th class="task-th">Task</th>`;
+
+  for (let d = 1; d <= days; d++) {
+    const tod = isToday(viewYear, viewMonth, d);
+    const tc = tod ? ' today-th' : '';
+    const wd = new Date(viewYear, viewMonth, d).getDay();
+    yrCells += `<th class="${tc}" style="font-size:10px;color:${tod?'white':'#888780'};padding:3px 4px;">${viewYear}</th>`;
+    moCells += `<th class="${tc}" style="font-size:10px;font-weight:600;">${MONTHS[viewMonth].slice(0,3)}</th>`;
+    wdCells += `<th class="${tc}" style="font-size:10px;">${WDAYS[wd]}</th>`;
+    dyCells += `<th class="${tc}" style="font-size:12px;min-width:34px;">${d}</th>`;
+  }
+  thead.innerHTML = `
+    <tr class="yr-row">${yrCells}</tr>
+    <tr class="mo-row">${moCells}</tr>
+    <tr class="day-row">${wdCells}</tr>
+    <tr class="day-row" style="font-weight:700;">${dyCells}</tr>`;
+
+  // Task rows
+  let rows = state.tasks.map(t => {
+    let cells = `<td class="task-td">
+      <div class="task-name-wrap">
+        <span class="task-name-text" id="tn-${t.id}" onclick="startRenameTask(${t.id})" title="Click to rename">${t.name}</span>
+        <button class="del-task-btn" onclick="confirmDelete(${t.id},'${t.name.replace(/'/g,"\\'")}')">&#215;</button>
+      </div>
+    </td>`;
+    for (let d = 1; d <= days; d++) {
+      const ds = dateStr(viewYear, viewMonth, d);
+      const checked = getCheck(t.id, ds);
+      const fut = isFuture(viewYear, viewMonth, d);
+      const tod = isToday(viewYear, viewMonth, d);
+      const cls = tod ? 'today-col' : (fut ? 'future-col' : 'past-col');
+      // All days are editable (past, today, future)
+      cells += `<td class="check-td ${cls}">
+        <input type="checkbox" ${checked ? 'checked' : ''} onchange="setCheck(${t.id},'${ds}',this.checked ? 1 : 0 ? 1 : 0)" />
+      </td>`;
+    }
+    return `<tr>${cells}</tr>`;
+  }).join('');
+
+  // Add row
+  rows += `<tr class="add-row"><td colspan="${days + 1}">
+    <div class="add-row-inner">
+      <input class="add-task-inp" id="addTaskInp" placeholder="New task name..." onkeydown="if(event.key==='Enter')addTask()" />
+      <button class="add-task-btn" onclick="addTask()">+ Add Task</button>
+    </div>
+  </td></tr>`;
+
+  tbody.innerHTML = rows;
+  updateStats();
+  updateChart();
+  renderGoals();
+}
+
+// ─── STATS ───────────────────────────────────────────────────────────────────
+function updateStats() {
+  const ds = todayStr();
+  const total = state.tasks.length;
+  const done = state.tasks.filter(t => getCheck(t.id, ds)).length;
+  document.getElementById('s1').textContent = done;
+  document.getElementById('s2').textContent = total;
+  document.getElementById('s3').textContent = total > 0 ? Math.round((done / total) * 100) + '%' : '0%';
+  // streak: consecutive days with >0 completions up to today
+  let streak = 0;
+  const d = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  for (let i = 0; i < 365; i++) {
+    const ds2 = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    const dayDone = state.tasks.filter(t => getCheck(t.id, ds2)).length;
+    if (dayDone > 0) { streak++; d.setDate(d.getDate() - 1); }
+    else break;
+  }
+  document.getElementById('s4').textContent = streak;
+}
+
+// ─── CHART ───────────────────────────────────────────────────────────────────
+let chartInst = null;
+function updateChart() {
+  const days = daysInMonth(viewYear, viewMonth);
+  const labels = [], data = [], pointColors = [], pointRadius = [];
+  for (let d = 1; d <= days; d++) {
+    const ds = dateStr(viewYear, viewMonth, d);
+    const total = state.tasks.length;
+    const done = state.tasks.filter(t => getCheck(t.id, ds)).length;
+    const pct = total > 0 ? Math.round((done / total) * 100) : 0;
+    labels.push(d);
+    data.push(pct);
+    const tod = isToday(viewYear, viewMonth, d);
+    pointColors.push(tod ? '#EF9F27' : '#1D9E75');
+    pointRadius.push(tod ? 7 : (pct > 0 ? 4 : 2));
+  }
+  if (chartInst) {
+    chartInst.data.labels = labels;
+    chartInst.data.datasets[0].data = data;
+    chartInst.data.datasets[0].pointBackgroundColor = pointColors;
+    chartInst.data.datasets[0].pointRadius = pointRadius;
+    chartInst.update('none');
+    return;
+  }
+  chartInst = new Chart(document.getElementById('chart'), {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [{
+        label: 'Completion %',
+        data,
+        borderColor: '#1D9E75',
+        backgroundColor: 'rgba(29,158,117,0.07)',
+        borderWidth: 2.5,
+        pointBackgroundColor: pointColors,
+        pointRadius,
+        pointHoverRadius: 8,
+        tension: 0.38,
+        fill: true,
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            title: ctx => {
+              const d = ctx[0].label;
+              return `${MONTHS[viewMonth]} ${d}, ${viewYear}`;
+            },
+            label: ctx => {
+              const d = ctx.parsed.x + 1;
+              const ds = dateStr(viewYear, viewMonth, d);
+              const done = state.tasks.filter(t => getCheck(t.id, ds)).length;
+              return [`Completion: ${ctx.parsed.y}%`, `Tasks done: ${done} / ${state.tasks.length}`];
+            }
+          },
+          backgroundColor: '#fff',
+          titleColor: '#2C2C2A',
+          bodyColor: '#5F5E5A',
+          borderColor: 'rgba(0,0,0,0.1)',
+          borderWidth: 1,
+          padding: 10,
+          cornerRadius: 8,
+        }
+      },
+      scales: {
+        y: {
+          min: 0, max: 100,
+          ticks: { callback: v => v + '%', font: { size: 11 }, color: '#888780', stepSize: 25 },
+          grid: { color: 'rgba(136,135,128,0.1)' },
+          border: { display: false }
+        },
+        x: {
+          ticks: { font: { size: 11 }, color: '#888780', autoSkip: true, maxTicksLimit: 16 },
+          grid: { display: false },
+          border: { display: false }
+        }
+      }
+    }
+  });
+}
+
+// ─── EXPORT CSV ──────────────────────────────────────────────────────────────
+function exportCSV() {
+  const days = daysInMonth(viewYear, viewMonth);
+  let csv = 'Task,' + Array.from({length: days}, (_,i) => `${MONTHS[viewMonth].slice(0,3)} ${i+1}`).join(',') + ',Total\n';
+  state.tasks.forEach(t => {
+    let row = `"${t.name}"`;
+    let total = 0;
+    for (let d = 1; d <= days; d++) {
+      const ds = dateStr(viewYear, viewMonth, d);
+      const v = getCheck(t.id, ds) ? 1 : 0;
+      row += ',' + v; total += v;
+    }
+    row += ',' + total;
+    csv += row + '\n';
+  });
+  // Summary row
+  csv += '\nDate,' + Array.from({length: days}, (_,i) => {
+    const ds = dateStr(viewYear, viewMonth, i+1);
+    return state.tasks.filter(t => getCheck(t.id, ds)).length + '/' + state.tasks.length;
+  }).join(',') + '\n';
+
+  const blob = new Blob([csv], {type:'text/csv'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `progress-${viewYear}-${String(viewMonth+1).padStart(2,'0')}.csv`;
+  a.click();
+  toast('CSV exported!');
+}
+
+// ─── TOAST ───────────────────────────────────────────────────────────────────
+let toastTimer;
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 2200);
+}
+
+// ─── KEYBOARD SHORTCUTS ──────────────────────────────────────────────────────
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeModal();
+  if ((e.metaKey || e.ctrlKey) && e.key === 's') { e.preventDefault(); saveData(); }
+});
+document.getElementById('goalInp').addEventListener('keydown', e => { if (e.key === 'Enter') addGoal(); });
+document.getElementById('confirmModal').addEventListener('click', e => { if (e.target === e.currentTarget) closeModal(); });
+
+// ─── INIT ────────────────────────────────────────────────────────────────────
+render();
+</script>
+
+<script>
+  function isPastDate(dateStr) {
+  const today = new Date();
+  const inputDate = new Date(dateStr);
+
+  today.setHours(0,0,0,0);
+  inputDate.setHours(0,0,0,0);
+
+  return inputDate < today;
+}
+function setCheck(taskId, date, status) {
+  if (isPastDate(date)) {
+    alert("Past days cannot be modified ❌");
+    render();
+    return;
+  }
+
+  fetch("http://localhost:3000/api/checks", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      task_id: taskId,
+      date: date,
+      status: status
+    })
+  })
+  .then(res => res.json())
+  .then(data => {
+    console.log("Saved:", data);
+
+    // ✅ FIX: update local state
+    if (!state.checks[taskId]) state.checks[taskId] = {};
+    state.checks[taskId][date] = status;
+
+    render();        
+    updateChart();   
+  })
+  .catch(err => console.error(err));
+}
+</script>
+
+
+
+</body></html>
